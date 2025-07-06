@@ -16,8 +16,15 @@ jobs:
         with:
           lfs: true  # Git LFS 対応
 
+      - name: Free up disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true  # Node.js や Android toolchain のキャッシュも削除
+          docker-images: true  # 未使用Dockerイメージ削除
+          large-packages: true # 不要パッケージ削除
+
       - name: Cache Unity Library
-        uses: actions/cache@v3
+        uses: actions/cache@v4
         with:
           path: Library
           key: Library-Android-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
