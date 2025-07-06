@@ -342,6 +342,29 @@ MonoBehaviour:
   company: Unity
   priority: -100
   required: 0
+--- !u!114 &-2988163508471473772
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b5a1f07dc5afe854f9f12a4194aca3fb, type: 3}
+  m_Name: iPhone
+  m_EditorClassIdentifier: 
+  features:
+  - {fileID: 7415854489400905591}
+  m_renderMode: 1
+  m_autoColorSubmissionMode: 1
+  m_colorSubmissionModes:
+    m_List: 00000000
+  m_depthSubmissionMode: 0
+  m_spacewarpMotionVectorTextureFormat: 0
+  m_optimizeBufferDiscards: 0
+  m_symmetricProjection: 0
+  m_foveatedRenderingApi: 0
 --- !u!114 &-2625113865163045016
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -498,11 +521,12 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 9f0ebc320a151d3408ea1e9fce54d40e, type: 3}
   m_Name: OpenXR Package Settings
   m_EditorClassIdentifier: 
-  Keys: 010000000700000024000000
+  Keys: 01000000070000002400000004000000
   Values:
   - {fileID: -2370768527737482624}
   - {fileID: 2880673425016655301}
   - {fileID: 7797401079925728031}
+  - {fileID: -2988163508471473772}
 --- !u!114 &394631133538601964
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -608,7 +632,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2b8a6d03de5f8f34383932f29d464a21, type: 3}
   m_Name: PICONeo3ControllerProfile Android
   m_EditorClassIdentifier: 
-  m_enabled: 1
+  m_enabled: 0
   nameUi: PICO Neo3 Touch Controller Profile
   version: 1.0.0
   featureIdInternal: com.unity.openxr.feature.input.PICONeo3touch
@@ -636,6 +660,7 @@ MonoBehaviour:
   company: PICO
   priority: 0
   required: 0
+  isAnchorSubsystem: 0
 --- !u!114 &1989485090953344415
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -656,6 +681,7 @@ MonoBehaviour:
   company: PICO
   priority: 0
   required: 0
+  isCameraSubsystem: 1
 --- !u!114 &2187067482252293261
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -814,6 +840,7 @@ MonoBehaviour:
   company: PICO
   priority: 0
   required: 0
+  isBodyTracking: 0
 --- !u!114 &3953915019175844225
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1200,6 +1227,26 @@ MonoBehaviour:
   company: PICO
   priority: 0
   required: 0
+--- !u!114 &7415854489400905591
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: b213d3e3c7f3109449eb46a4c8ee42f0, type: 3}
+  m_Name: XrPerformanceSettingsFeature iPhone
+  m_EditorClassIdentifier: 
+  m_enabled: 0
+  nameUi: XR Performance Settings
+  version: 1.0.0
+  featureIdInternal: com.unity.openxr.feature.extension.performance_settings
+  openxrExtensionStrings: XR_EXT_performance_settings
+  company: Unity
+  priority: 0
+  required: 0
 --- !u!114 &7433975208674960295
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1264,6 +1311,7 @@ MonoBehaviour:
   company: PICO
   priority: 0
   required: 0
+  isSessionSubsystem: 0
 --- !u!114 &7797401079925728031
 MonoBehaviour:
   m_ObjectHideFlags: 0
