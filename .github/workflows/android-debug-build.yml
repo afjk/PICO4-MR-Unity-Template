@@ -19,10 +19,11 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
+    
       # Step 2: Setup Unity with Android build support
       # Uses the Unity version specified in ProjectSettings/ProjectVersion.txt
       - name: Setup Unity
-        uses: game-ci/unity-setup@v3
+        uses: game-ci/unity-actions/setup@v2
         with:
           unityVersion: 6000.0.48f1
           modules: android
