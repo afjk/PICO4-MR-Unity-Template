@@ -1,0 +1,53 @@
+# GitHub Actions workflow for Unity Android Debug Build
+# This workflow automatically builds the Unity project for Android platform
+# on every push to main branch and on pull requests
+name: Build Android Debug
+
+# Trigger the workflow on push to main branch and on pull requests
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  build:
+    # Use the latest Ubuntu runner
+    runs-on: ubuntu-latest
+    
+    steps:
+      # Step 1: Checkout the repository code
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      # Step 2: Setup Unity with Android build support
+      # Uses the Unity version specified in ProjectSettings/ProjectVersion.txt
+      - name: Setup Unity
+        uses: game-ci/unity-setup@v3
+        with:
+          unityVersion: 6000.0.48f1
+          modules: android
+
+      # Step 3: Activate Unity license (Personal)
+      # Requires UNITY_EMAIL and UNITY_PASSWORD secrets to be configured in the repository
+      - name: Activate Unity License
+        uses: game-ci/unity-activate@v2
+        env:
+          UNITY_EMAIL:    ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+
+      # Step 4: Build Unity project for Android platform
+      # Creates a debug build without requiring keystore or signing
+      - name: Build Unity Project for Android
+        uses: game-ci/unity-builder@v3
+        with:
+          targetPlatform: Android
+          buildName: pico4mr
+          buildsPath: build
+
+      # Step 5: Upload the generated APK as a workflow artifact
+      # This allows downloading the APK from the GitHub Actions run
+      - name: Upload Android APK
+        uses: actions/upload-artifact@v4
+        with:
+          name: AndroidBuild
+          path: build/Android/*.apk
