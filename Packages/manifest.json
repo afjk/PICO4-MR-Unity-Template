@@ -16,6 +16,7 @@
     "com.unity.xr.arfoundation": "6.2.0",
     "com.unity.xr.hands": "1.6.0",
     "com.unity.xr.interaction.toolkit": "3.2.0",
+    "com.unity.xr.meta-openxr": "2.2.0",
     "com.unity.xr.openxr": "1.14.3",
     "com.unity.xr.openxr.picoxr": "https://github.com/Pico-Developer/PICO-Unity-OpenXR-SDK.git#release_1.4.0",
     "com.unity.modules.accessibility": "1.0.0",
