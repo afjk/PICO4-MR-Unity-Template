@@ -100,3 +100,5 @@ InitTestScene*.unity*
 
 .DS_Store
 Assets/Samples
+Assets/Unity.VisualScripting.Generated
+Assets/Unity.VisualScripting.Generated.meta
