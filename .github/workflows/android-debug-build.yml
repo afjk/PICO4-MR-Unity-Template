@@ -40,7 +40,7 @@ jobs:
           UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
         with:
           targetPlatform: Android           # Android ビルド
-          unityVersion: 6000.0.48f1         # Unity バージョン指定
+          unityVersion: 6000.0.59f2         # Unity バージョン指定
 
       - name: Upload Android Build Artifact
         uses: actions/upload-artifact@v4
