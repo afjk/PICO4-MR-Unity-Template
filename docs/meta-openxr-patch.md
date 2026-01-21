@@ -16,4 +16,4 @@ Meta 提供の `com.unity.xr.meta-openxr` パッケージに対する独自修�
 2. スクリプトは `Library/PackageCache` から `Packages/com.unity.xr.meta-openxr` へパッケージをコピーし、`patches/meta-openxr-passthrough.patch` を適用します。
 3. 実行後に Unity を再起動するか、`Package Manager` ウィンドウを開いてリコンパイルをトリガーすると、パッチ済み SDK が利用可能になります。
 
-パッチの内容はコミット `14f2fac85dc46cce4881a9a146fdc2aa9c04cd45` のものと同等で、パススルー初期化の安定化と診断ログの追加を行います。
+パッチの内容はパススルー初期化の安定化と診断ログの追加を行います。
