@@ -1,0 +1,276 @@
+diff --git a/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/CompositionLayers/MetaOpenXRPassthroughLayer.cs b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/CompositionLayers/MetaOpenXRPassthroughLayer.cs
+index c5ea0bc..a219245 100644
+--- a/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/CompositionLayers/MetaOpenXRPassthroughLayer.cs
++++ b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/CompositionLayers/MetaOpenXRPassthroughLayer.cs
+@@ -2,6 +2,7 @@
+ using System.Collections.Generic;
+ using Unity.XR.CompositionLayers.Layers;
+ using Unity.XR.CompositionLayers.Services;
++using UnityEngine;
+ using UnityEngine.XR.OpenXR.CompositionLayers;
+ using UnityEngine.XR.OpenXR.NativeTypes;
+ using UnityEngine.XR.OpenXR.NativeTypes.Meta;
+@@ -44,6 +45,21 @@ namespace UnityEngine.XR.OpenXR.Features.Meta
+                 RemoveLayer(layerInfo.Id);
+ 
+             var session = OpenXRLayerUtility.GetXRSession();
++            if (session == 0)
++            {
++                session = PassthroughInitializationGate.SessionHandle;
++                if (session != 0)
++                    Debug.LogWarning($"[MetaPassthroughDiag] OpenXRLayerUtility returned session=0. Falling back to gate session handle {session}.");
++            }
++
++            if (session == 0)
++            {
++                Debug.LogError("[MetaPassthroughDiag] xrSession handle is 0 even after gate fallback. Aborting passthrough layer creation.");
++                nativeLayer = default;
++                return false;
++            }
++
++            Debug.Log($"[MetaPassthroughDiag] CreateNativeLayer start (layerId={layerInfo.Id}, session={session}, gateState={PassthroughInitializationGate.CurrentState})");
+ 
+             var passthroughCreateInfo = new XrPassthroughCreateInfoFB
+             {
+@@ -57,9 +73,11 @@ namespace UnityEngine.XR.OpenXR.Features.Meta
+ 
+             if (result != XrResult.Success)
+             {
++                Debug.LogError($"[MetaPassthroughDiag] xrCreatePassthroughFB failed result={result}, session={session}");
+                 nativeLayer = default;
+                 return false;
+             }
++            Debug.Log($"[MetaPassthroughDiag] xrCreatePassthroughFB success handle={passthroughHandle}");
+ 
+             var passthroughLayerCreateInfo = new XrPassthroughLayerCreateInfoFB
+             {
+@@ -75,9 +93,11 @@ namespace UnityEngine.XR.OpenXR.Features.Meta
+ 
+             if (result != XrResult.Success)
+             {
++                Debug.LogError($"[MetaPassthroughDiag] xrCreatePassthroughLayerFB failed result={result}, session={session}, passthroughHandle={passthroughHandle}");
+                 nativeLayer = default;
+                 return false;
+             }
++            Debug.Log($"[MetaPassthroughDiag] xrCreatePassthroughLayerFB success layerHandle={passthroughLayerHandle}");
+ 
+             s_LayerIdsToPassthroughData.Add(
+                 layerInfo.Id,
+@@ -105,6 +125,7 @@ namespace UnityEngine.XR.OpenXR.Features.Meta
+ #if VERBOSE_LOGGING
+             Debug.Log("CreateNativeLayer returned true");
+ #endif
++            Debug.Log($"[MetaPassthroughDiag] CreateNativeLayer completed for layerId={layerInfo.Id}");
+             return true;
+         }
+ 
+diff --git a/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/MetaOpenXRFeature.cs b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/MetaOpenXRFeature.cs
+index 8da9cdd..aec133f 100644
+--- a/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/MetaOpenXRFeature.cs
++++ b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/MetaOpenXRFeature.cs
+@@ -5,6 +5,10 @@ namespace UnityEngine.XR.OpenXR.Features.Meta
+     /// </summary>
+     public class MetaOpenXRFeature : OpenXRFeature
+     {
++        internal static ulong CurrentSessionHandle => s_CurrentSessionHandle;
++
++        static ulong s_CurrentSessionHandle;
++
+         /// <summary>
+         /// Called when the enabled state of a feature changes.
+         /// </summary>
+@@ -15,5 +19,18 @@ namespace UnityEngine.XR.OpenXR.Features.Meta
+             OpenXRLifeCycleFeature.TryRefreshEnabledState();
+ #endif // UNITY_EDITOR
+         }
++
++        protected override void OnSessionBegin(ulong xrSession)
++        {
++            base.OnSessionBegin(xrSession);
++            s_CurrentSessionHandle = xrSession;
++        }
++
++        protected override void OnSessionEnd(ulong xrSession)
++        {
++            base.OnSessionEnd(xrSession);
++            if (s_CurrentSessionHandle == xrSession)
++                s_CurrentSessionHandle = 0;
++        }
+     }
+ }
+diff --git a/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/ARCameraFeature.cs b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/ARCameraFeature.cs
+index ecb20bb..565f613 100644
+--- a/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/ARCameraFeature.cs
++++ b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/ARCameraFeature.cs
+@@ -88,6 +88,12 @@ namespace UnityEngine.XR.OpenXR.Features.Meta
+             DestroySubsystem<XRCameraSubsystem>();
+         }
+ 
++        protected override void OnSessionStateChange(int oldState, int newState)
++        {
++            base.OnSessionStateChange(oldState, newState);
++            PassthroughInitializationGate.NotifySessionStateChange(newState);
++        }
++
+ #if UNITY_EDITOR
+         /// <summary>
+         /// Validation Rules for ARCameraFeature.
+diff --git a/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/MetaOpenXRCameraSubsystem.cs b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/MetaOpenXRCameraSubsystem.cs
+index 4e0e8ef..3bca57f 100644
+--- a/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/MetaOpenXRCameraSubsystem.cs
++++ b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/MetaOpenXRCameraSubsystem.cs
+@@ -72,11 +72,7 @@ namespace UnityEngine.XR.OpenXR.Features.Meta
+             /// </summary>
+             public override void Start()
+             {
+-                if (!IsPassthroughLayerActive())
+-                    CreatePassthroughLayer();
+-
+-                var defaultLayer = FindCompositionLayerType<DefaultLayerData>(CompositionLayerManager.Instance.CompositionLayers);
+-                defaultLayer.LayerData.BlendType = BlendType.Premultiply;
++                PassthroughInitializationGate.ExecuteOrEnqueue("MetaOpenXRCameraSubsystem.Start", StartInternal);
+             }
+ 
+             public override void Stop()
+@@ -129,6 +125,20 @@ namespace UnityEngine.XR.OpenXR.Features.Meta
+                     UnityObjectUtils.Destroy(passthroughLayer.gameObject);
+             }
+ 
++            static void StartInternal()
++            {
++                if (!IsPassthroughLayerActive())
++                    CreatePassthroughLayer();
++
++                var compositionLayerManager = CompositionLayerManager.Instance;
++                if (compositionLayerManager == null)
++                    return;
++
++                var defaultLayer = FindCompositionLayerType<DefaultLayerData>(compositionLayerManager.CompositionLayers);
++                if (defaultLayer != null)
++                    defaultLayer.LayerData.BlendType = BlendType.Premultiply;
++            }
++
+             static CompositionLayer FindCompositionLayerType<T>(IReadOnlyCollection<CompositionLayer> layers)
+             {
+                 foreach (var layer in layers)
+diff --git a/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/PassthroughInitializationGate.cs b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/PassthroughInitializationGate.cs
+new file mode 100644
+index 0000000..ad324a2
+--- /dev/null
++++ b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/PassthroughInitializationGate.cs
+@@ -0,0 +1,106 @@
++using System;
++using System.Collections.Generic;
++using UnityEngine;
++using UnityEngine.XR.OpenXR.NativeTypes;
++
++namespace UnityEngine.XR.OpenXR.Features.Meta
++{
++    /// <summary>
++    ///     Simple gate that queues passthrough initialization callbacks until the OpenXR session reaches FOCUSED.
++    ///     For lightweight diagnostics we also log state changes and owners of queued operations.
++    /// </summary>
++    static class PassthroughInitializationGate
++    {
++        static readonly Dictionary<string, Action> s_PendingActions = new();
++
++        static XrSessionState s_CurrentSessionState = XrSessionState.Unknown;
++        static ulong s_LastKnownSessionHandle;
++
++        internal static XrSessionState CurrentState => s_CurrentSessionState;
++        internal static ulong SessionHandle => s_LastKnownSessionHandle;
++
++        internal static void NotifySessionStateChange(int newState)
++        {
++            var parsedState = (XrSessionState)newState;
++            if (parsedState == s_CurrentSessionState)
++                return;
++
++            TryRefreshSessionHandle("NotifySessionStateChange");
++            var previous = s_CurrentSessionState;
++            s_CurrentSessionState = parsedState;
++            Debug.Log($"[PassthroughInitGate] Session state changed {previous} -> {s_CurrentSessionState}");
++
++            TryFlushPendingActions();
++        }
++
++        internal static bool ExecuteOrEnqueue(string owner, Action action)
++        {
++            if (action == null)
++                return true;
++
++            TryRefreshSessionHandle($"ExecuteOrEnqueue:{owner}");
++
++            if (CanExecuteNow)
++            {
++                Debug.Log($"[PassthroughInitGate] Executing '{owner}' immediately at {s_CurrentSessionState}");
++                action();
++                return true;
++            }
++
++            Debug.Log($"[PassthroughInitGate] Deferring '{owner}' until XR_SESSION_STATE_FOCUSED (current: {s_CurrentSessionState})");
++            s_PendingActions[owner] = action;
++            return false;
++        }
++
++        static bool CanExecuteNow => s_CurrentSessionState == XrSessionState.Focused && s_LastKnownSessionHandle != 0;
++
++        static void TryFlushPendingActions()
++        {
++            if (!CanExecuteNow)
++            {
++                if (s_CurrentSessionState == XrSessionState.Focused && s_LastKnownSessionHandle == 0)
++                    Debug.LogWarning("[PassthroughInitGate] Session is FOCUSED but xrSession handle is still 0. Waiting before releasing queued actions.");
++                return;
++            }
++
++            FlushPendingActions();
++        }
++
++        static void FlushPendingActions()
++        {
++            if (s_PendingActions.Count == 0)
++                return;
++
++            Debug.Log($"[PassthroughInitGate] Releasing {s_PendingActions.Count} queued actions");
++
++            foreach (var kvp in s_PendingActions)
++            {
++                try
++                {
++                    kvp.Value?.Invoke();
++                }
++                catch (Exception ex)
++                {
++                    Debug.LogError($"[PassthroughInitGate] Exception while executing '{kvp.Key}': {ex}");
++                }
++            }
++
++            s_PendingActions.Clear();
++        }
++
++        static bool TryRefreshSessionHandle(string source)
++        {
++            if (s_LastKnownSessionHandle != 0)
++                return true;
++
++            var handle = MetaOpenXRFeature.CurrentSessionHandle;
++            if (handle == 0)
++                return false;
++
++            s_LastKnownSessionHandle = handle;
++            Debug.Log($"[PassthroughInitGate] Session handle refreshed ({source}): {s_LastKnownSessionHandle}");
++            TryFlushPendingActions();
++            return true;
++        }
++    }
++}
+diff --git a/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/PassthroughInitializationGate.cs.meta b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/PassthroughInitializationGate.cs.meta
+new file mode 100644
+index 0000000..e2157e8
+--- /dev/null
++++ b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/PassthroughInitializationGate.cs.meta
+@@ -0,0 +1,2 @@
++fileFormatVersion: 2
++guid: caabe2b7e627345329b74c1f5a963728
+\ No newline at end of file
