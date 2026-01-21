@@ -32,8 +32,8 @@ rm -rf "$PACKAGE_DEST"
 cp -R "$PACKAGE_SOURCE" "$PACKAGE_DEST"
 
 echo "Applying passthrough patch..."
-if git -C "$PROJECT_ROOT" apply --check -p2 "$PATCH_FILE"; then
-    git -C "$PROJECT_ROOT" apply -p2 "$PATCH_FILE"
+if git -C "$PROJECT_ROOT" apply --check -p1 "$PATCH_FILE"; then
+    git -C "$PROJECT_ROOT" apply -p1 "$PATCH_FILE"
     echo "Patch applied successfully."
 else
     echo "Patch cannot be applied cleanly. The package may already be patched." >&2

@@ -1,7 +1,7 @@
-diff --git a/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/CompositionLayers/MetaOpenXRPassthroughLayer.cs b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/CompositionLayers/MetaOpenXRPassthroughLayer.cs
+diff --git a/Packages/com.unity.xr.meta-openxr/Runtime/CompositionLayers/MetaOpenXRPassthroughLayer.cs b/Packages/com.unity.xr.meta-openxr/Runtime/CompositionLayers/MetaOpenXRPassthroughLayer.cs
 index c5ea0bc..a219245 100644
---- a/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/CompositionLayers/MetaOpenXRPassthroughLayer.cs
-+++ b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/CompositionLayers/MetaOpenXRPassthroughLayer.cs
+--- a/Packages/com.unity.xr.meta-openxr/Runtime/CompositionLayers/MetaOpenXRPassthroughLayer.cs
++++ b/Packages/com.unity.xr.meta-openxr/Runtime/CompositionLayers/MetaOpenXRPassthroughLayer.cs
 @@ -2,6 +2,7 @@
  using System.Collections.Generic;
  using Unity.XR.CompositionLayers.Layers;
@@ -64,10 +64,10 @@ index c5ea0bc..a219245 100644
              return true;
          }
  
-diff --git a/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/MetaOpenXRFeature.cs b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/MetaOpenXRFeature.cs
+diff --git a/Packages/com.unity.xr.meta-openxr/Runtime/MetaOpenXRFeature.cs b/Packages/com.unity.xr.meta-openxr/Runtime/MetaOpenXRFeature.cs
 index 8da9cdd..aec133f 100644
---- a/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/MetaOpenXRFeature.cs
-+++ b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/MetaOpenXRFeature.cs
+--- a/Packages/com.unity.xr.meta-openxr/Runtime/MetaOpenXRFeature.cs
++++ b/Packages/com.unity.xr.meta-openxr/Runtime/MetaOpenXRFeature.cs
 @@ -5,6 +5,10 @@ namespace UnityEngine.XR.OpenXR.Features.Meta
      /// </summary>
      public class MetaOpenXRFeature : OpenXRFeature
@@ -98,11 +98,11 @@ index 8da9cdd..aec133f 100644
 +        }
      }
  }
-diff --git a/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/ARCameraFeature.cs b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/ARCameraFeature.cs
-index ecb20bb..565f613 100644
---- a/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/ARCameraFeature.cs
-+++ b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/ARCameraFeature.cs
-@@ -88,6 +88,12 @@ namespace UnityEngine.XR.OpenXR.Features.Meta
+diff --git a/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/ARCameraFeature.cs b/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/ARCameraFeature.cs
+index ce96d59..4fb76c8 100644
+--- a/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/ARCameraFeature.cs
++++ b/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/ARCameraFeature.cs
+@@ -92,6 +92,12 @@ namespace UnityEngine.XR.OpenXR.Features.Meta
              DestroySubsystem<XRCameraSubsystem>();
          }
  
@@ -115,32 +115,25 @@ index ecb20bb..565f613 100644
  #if UNITY_EDITOR
          /// <summary>
          /// Validation Rules for ARCameraFeature.
-diff --git a/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/MetaOpenXRCameraSubsystem.cs b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/MetaOpenXRCameraSubsystem.cs
-index 4e0e8ef..3bca57f 100644
---- a/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/MetaOpenXRCameraSubsystem.cs
-+++ b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/MetaOpenXRCameraSubsystem.cs
-@@ -72,11 +72,7 @@ namespace UnityEngine.XR.OpenXR.Features.Meta
+diff --git a/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/MetaOpenXRCameraSubsystem.cs b/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/MetaOpenXRCameraSubsystem.cs
+index 032512a..6eb46fb 100644
+--- a/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/MetaOpenXRCameraSubsystem.cs
++++ b/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/MetaOpenXRCameraSubsystem.cs
+@@ -82,12 +82,22 @@ namespace UnityEngine.XR.OpenXR.Features.Meta
+             /// Start the camera functionality.
              /// </summary>
              public override void Start()
++            {
++                PassthroughInitializationGate.ExecuteOrEnqueue("MetaOpenXRCameraSubsystem.Start", StartInternal);
++            }
++
++            void StartInternal()
              {
--                if (!IsPassthroughLayerActive())
--                    CreatePassthroughLayer();
--
+                 if (!IsPassthroughLayerActive())
+                     CreatePassthroughLayer();
+ 
 -                var defaultLayer = FindCompositionLayerType<DefaultLayerData>(CompositionLayerManager.Instance.CompositionLayers);
 -                defaultLayer.LayerData.BlendType = BlendType.Premultiply;
-+                PassthroughInitializationGate.ExecuteOrEnqueue("MetaOpenXRCameraSubsystem.Start", StartInternal);
-             }
- 
-             public override void Stop()
-@@ -129,6 +125,20 @@ namespace UnityEngine.XR.OpenXR.Features.Meta
-                     UnityObjectUtils.Destroy(passthroughLayer.gameObject);
-             }
- 
-+            static void StartInternal()
-+            {
-+                if (!IsPassthroughLayerActive())
-+                    CreatePassthroughLayer();
-+
 +                var compositionLayerManager = CompositionLayerManager.Instance;
 +                if (compositionLayerManager == null)
 +                    return;
@@ -148,16 +141,14 @@ index 4e0e8ef..3bca57f 100644
 +                var defaultLayer = FindCompositionLayerType<DefaultLayerData>(compositionLayerManager.CompositionLayers);
 +                if (defaultLayer != null)
 +                    defaultLayer.LayerData.BlendType = BlendType.Premultiply;
-+            }
-+
-             static CompositionLayer FindCompositionLayerType<T>(IReadOnlyCollection<CompositionLayer> layers)
-             {
-                 foreach (var layer in layers)
-diff --git a/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/PassthroughInitializationGate.cs b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/PassthroughInitializationGate.cs
+ 
+ #if UNITY_ANDROID && !UNITY_EDITOR
+                 m_IsInitialized = NativeApi.UnityMetaQuest_InitializeCamera();
+diff --git a/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/PassthroughInitializationGate.cs b/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/PassthroughInitializationGate.cs
 new file mode 100644
 index 0000000..ad324a2
 --- /dev/null
-+++ b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/PassthroughInitializationGate.cs
++++ b/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/PassthroughInitializationGate.cs
 @@ -0,0 +1,106 @@
 +using System;
 +using System.Collections.Generic;
@@ -265,12 +256,11 @@ index 0000000..ad324a2
 +        }
 +    }
 +}
-diff --git a/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/PassthroughInitializationGate.cs.meta b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/PassthroughInitializationGate.cs.meta
+diff --git a/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/PassthroughInitializationGate.cs.meta b/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/PassthroughInitializationGate.cs.meta
 new file mode 100644
-index 0000000..e2157e8
+index 0000000..e1acaa1
 --- /dev/null
-+++ b/STYLY-HMD-FC-XRTour/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/PassthroughInitializationGate.cs.meta
++++ b/Packages/com.unity.xr.meta-openxr/Runtime/Subsystems/Camera/PassthroughInitializationGate.cs.meta
 @@ -0,0 +1,2 @@
 +fileFormatVersion: 2
-+guid: caabe2b7e627345329b74c1f5a963728
-\ No newline at end of file
++guid: 71e1171ea8f847d78d8ff09d2c2a1eef
