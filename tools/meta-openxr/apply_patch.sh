@@ -5,7 +5,7 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PACKAGE_NAME="com.unity.xr.meta-openxr"
 PACKAGE_CACHE_ROOT="$PROJECT_ROOT/Library/PackageCache"
 PACKAGE_DEST="$PROJECT_ROOT/Packages/$PACKAGE_NAME"
-PATCH_FILE="$PROJECT_ROOT/patches/meta-openxr-passthrough.patch"
+PATCH_FILE="$PROJECT_ROOT/tools/meta-openxr/patches/meta-openxr-passthrough.patch"
 
 echo "== Meta OpenXR patcher =="
 echo "Project root: $PROJECT_ROOT"
@@ -32,8 +32,8 @@ rm -rf "$PACKAGE_DEST"
 cp -R "$PACKAGE_SOURCE" "$PACKAGE_DEST"
 
 echo "Applying passthrough patch..."
-if git -C "$PROJECT_ROOT" apply --check -p2 "$PATCH_FILE"; then
-    git -C "$PROJECT_ROOT" apply -p2 "$PATCH_FILE"
+if git -C "$PROJECT_ROOT" apply --check -p1 "$PATCH_FILE"; then
+    git -C "$PROJECT_ROOT" apply -p1 "$PATCH_FILE"
     echo "Patch applied successfully."
 else
     echo "Patch cannot be applied cleanly. The package may already be patched." >&2
