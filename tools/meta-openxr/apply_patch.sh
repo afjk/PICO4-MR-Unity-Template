@@ -5,7 +5,7 @@ PROJECT_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/../.." && pwd)"
 PACKAGE_NAME="com.unity.xr.meta-openxr"
 PACKAGE_CACHE_ROOT="$PROJECT_ROOT/Library/PackageCache"
 PACKAGE_DEST="$PROJECT_ROOT/Packages/$PACKAGE_NAME"
-PATCH_FILE="$PROJECT_ROOT/patches/meta-openxr-passthrough.patch"
+PATCH_FILE="$PROJECT_ROOT/tools/meta-openxr/patches/meta-openxr-passthrough.patch"
 
 echo "== Meta OpenXR patcher =="
 echo "Project root: $PROJECT_ROOT"
