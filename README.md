@@ -96,6 +96,51 @@ This template includes the following key packages:
 - **Universal Render Pipeline** (v17.0.4) - Optimized rendering pipeline
 - **Input System** (v1.14.0) - Modern input handling system
 
+## HDR and Post Processing Support
+
+This template supports HDR (High Dynamic Range) and Post Processing effects (such as Bloom) on PICO4 devices through a workaround using the Unity OpenXR Meta package.
+
+### Key Features
+
+- **HDR Support**: Enable HDR rendering while maintaining passthrough functionality
+- **Post Processing**: Apply visual effects like Bloom, Color Grading, and more
+- **URP Integration**: Works seamlessly with Universal Render Pipeline
+
+### Configuration Overview
+
+To enable HDR and Post Processing in your PICO4 MR application:
+
+1. **Camera Settings**:
+   - Enable `Post Processing` on the Main Camera
+   - Enable `HDR` on the Main Camera
+
+2. **URP Settings**:
+   - Set HDR Precision to `64 Bits`
+   - Enable `Alpha Processing` in Post Processing settings
+
+3. **Meta OpenXR Package**:
+   - Install Unity OpenXR Meta package (required even for PICO devices)
+   - Apply the passthrough initialization patch - see [Meta OpenXR Patch Guide](docs/meta-openxr-patch.md)
+
+4. **Android Settings**:
+   - Set Target API Level to `32` or higher
+
+5. **Post Processing Volume**:
+   - Add a Global Volume to your scene
+   - Configure desired effects (Bloom, Tonemapping, etc.)
+
+### Detailed Setup Guide
+
+For comprehensive step-by-step instructions, including troubleshooting and advanced configurations, refer to the Post Processing guide on Qiita:
+
+📖 **[PICO4 Ultra MR App Development - Post Processing Guide](https://qiita.com/afjk/items/4b31c908e075f60ec6e2)**
+
+### Important Notes
+
+- This workaround is not an official PICO solution and should be used at your own discretion
+- The Meta OpenXR package requires a patch to ensure proper passthrough initialization order
+- Always test thoroughly on actual PICO4/4Ultra devices as behavior may differ from Unity Editor
+
 ## Usage
 
 1. **Development Environment**: Follow the [Qiita setup guide](https://qiita.com/afjk/items/3549e9eeb6ed8e301f24) to configure your development environment
@@ -121,6 +166,7 @@ This project is licensed under the MIT License - see the [LICENSE](LICENSE) file
 ## Resources
 
 - 📖 [Setup Guide (Qiita)](https://qiita.com/afjk/items/3549e9eeb6ed8e301f24)
+- 📖 [Post Processing (HDR) Guide (Qiita)](https://qiita.com/afjk/items/4b31c908e075f60ec6e2)
 - 🔗 [PICO Developer Documentation](https://developer.picoxr.com/)
 - 🔗 [Unity XR Interaction Toolkit](https://docs.unity3d.com/Packages/com.unity.xr.interaction.toolkit@3.2/manual/index.html)
 - 🔗 [GameCI Documentation](https://game.ci/docs/)
