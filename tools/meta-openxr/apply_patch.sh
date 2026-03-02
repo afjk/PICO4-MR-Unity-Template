@@ -71,33 +71,41 @@ fi
 
 # 2) git apply --ignore-whitespace  -- tolerates CRLF/LF differences
 if [[ "$PATCH_APPLIED" != "true" ]]; then
-    echo "  Trying: git apply --ignore-whitespace ..."
-    reset_package
-    if git -C "$PROJECT_ROOT" apply --ignore-whitespace -p1 "$PATCH_FILE" 2>/dev/null; then
-        if verify_patch_applied; then
-            echo "  Patch applied successfully via 'git apply --ignore-whitespace'."
-            PATCH_APPLIED=true
+    if command -v git >/dev/null 2>&1; then
+        echo "  Trying: git apply --ignore-whitespace ..."
+        reset_package
+        if git -C "$PROJECT_ROOT" apply --ignore-whitespace -p1 "$PATCH_FILE" 2>/dev/null; then
+            if verify_patch_applied; then
+                echo "  Patch applied successfully via 'git apply --ignore-whitespace'."
+                PATCH_APPLIED=true
+            else
+                echo "  Warning: 'git apply --ignore-whitespace' reported success but verification failed."
+            fi
         else
-            echo "  Warning: 'git apply --ignore-whitespace' reported success but verification failed."
+            echo "  'git apply --ignore-whitespace' did not apply cleanly."
         fi
     else
-        echo "  'git apply --ignore-whitespace' did not apply cleanly."
+        echo "  'git' command not found, skipping."
     fi
 fi
 
 # 3) git apply  -- standard method
 if [[ "$PATCH_APPLIED" != "true" ]]; then
-    echo "  Trying: git apply ..."
-    reset_package
-    if git -C "$PROJECT_ROOT" apply -p1 "$PATCH_FILE" 2>/dev/null; then
-        if verify_patch_applied; then
-            echo "  Patch applied successfully via 'git apply'."
-            PATCH_APPLIED=true
+    if command -v git >/dev/null 2>&1; then
+        echo "  Trying: git apply ..."
+        reset_package
+        if git -C "$PROJECT_ROOT" apply -p1 "$PATCH_FILE" 2>/dev/null; then
+            if verify_patch_applied; then
+                echo "  Patch applied successfully via 'git apply'."
+                PATCH_APPLIED=true
+            else
+                echo "  Warning: 'git apply' reported success but verification failed."
+            fi
         else
-            echo "  Warning: 'git apply' reported success but verification failed."
+            echo "  'git apply' did not apply cleanly."
         fi
     else
-        echo "  'git apply' did not apply cleanly."
+        echo "  'git' command not found, skipping."
     fi
 fi
 
