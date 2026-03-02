@@ -31,12 +31,84 @@ echo "  $PACKAGE_DEST"
 rm -rf "$PACKAGE_DEST"
 cp -R "$PACKAGE_SOURCE" "$PACKAGE_DEST"
 
+# -- Verification ----------------------------------------------------------
+# The patch creates this new file (absent in the unpatched package) and adds
+# a reference to it inside an existing file.  Both checks must pass.
+VERIFY_NEW_FILE="$PACKAGE_DEST/Runtime/Subsystems/Camera/PassthroughInitializationGate.cs"
+VERIFY_MODIFIED_FILE="$PACKAGE_DEST/Runtime/CompositionLayers/MetaOpenXRPassthroughLayer.cs"
+VERIFY_GREP_PATTERN="PassthroughInitializationGate"
+
+verify_patch_applied() {
+    [[ -f "$VERIFY_NEW_FILE" ]] \
+        && grep -q "$VERIFY_GREP_PATTERN" "$VERIFY_MODIFIED_FILE" 2>/dev/null
+}
+
+reset_package() {
+    rm -rf "$PACKAGE_DEST"
+    cp -R "$PACKAGE_SOURCE" "$PACKAGE_DEST"
+}
+
+# -- Apply patch (highest-confidence method first) -------------------------
 echo "Applying passthrough patch..."
-if git -C "$PROJECT_ROOT" apply --check -p1 "$PATCH_FILE"; then
-    git -C "$PROJECT_ROOT" apply -p1 "$PATCH_FILE"
-    echo "Patch applied successfully."
+PATCH_APPLIED=false
+
+# 1) patch -p1  -- handles CRLF transparently on all platforms
+if command -v patch >/dev/null 2>&1; then
+    echo "  Trying: patch -p1 ..."
+    if (cd "$PROJECT_ROOT" && patch -p1 < "$PATCH_FILE"); then
+        if verify_patch_applied; then
+            echo "  Patch applied successfully via 'patch -p1'."
+            PATCH_APPLIED=true
+        else
+            echo "  Warning: 'patch -p1' reported success but verification failed."
+        fi
+    else
+        echo "  'patch -p1' did not apply cleanly."
+    fi
 else
-    echo "Patch cannot be applied cleanly. The package may already be patched." >&2
+    echo "  'patch' command not found, skipping."
+fi
+
+# 2) git apply --ignore-whitespace  -- tolerates CRLF/LF differences
+if [[ "$PATCH_APPLIED" != "true" ]]; then
+    echo "  Trying: git apply --ignore-whitespace ..."
+    reset_package
+    if git -C "$PROJECT_ROOT" apply --ignore-whitespace -p1 "$PATCH_FILE" 2>/dev/null; then
+        if verify_patch_applied; then
+            echo "  Patch applied successfully via 'git apply --ignore-whitespace'."
+            PATCH_APPLIED=true
+        else
+            echo "  Warning: 'git apply --ignore-whitespace' reported success but verification failed."
+        fi
+    else
+        echo "  'git apply --ignore-whitespace' did not apply cleanly."
+    fi
+fi
+
+# 3) git apply  -- standard method
+if [[ "$PATCH_APPLIED" != "true" ]]; then
+    echo "  Trying: git apply ..."
+    reset_package
+    if git -C "$PROJECT_ROOT" apply -p1 "$PATCH_FILE" 2>/dev/null; then
+        if verify_patch_applied; then
+            echo "  Patch applied successfully via 'git apply'."
+            PATCH_APPLIED=true
+        else
+            echo "  Warning: 'git apply' reported success but verification failed."
+        fi
+    else
+        echo "  'git apply' did not apply cleanly."
+    fi
+fi
+
+# -- Result ----------------------------------------------------------------
+if [[ "$PATCH_APPLIED" != "true" ]]; then
+    echo "" >&2
+    echo "ERROR: All patch methods failed." >&2
+    echo "The package version may be incompatible with the patch." >&2
+    echo "  Package source: $PACKAGE_SOURCE" >&2
+    echo "  Patch file:     $PATCH_FILE" >&2
+    rm -rf "$PACKAGE_DEST"
     exit 1
 fi
 
