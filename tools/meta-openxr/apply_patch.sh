@@ -43,6 +43,13 @@ verify_patch_applied() {
         && grep -q "$VERIFY_GREP_PATTERN" "$VERIFY_MODIFIED_FILE" 2>/dev/null
 }
 
+# Check if the package is already patched (e.g., from a previously patched PackageCache)
+if verify_patch_applied; then
+    echo "Package is already patched. No patching needed."
+    echo "Done. You can now build with the patched Meta OpenXR package."
+    exit 0
+fi
+
 reset_package() {
     rm -rf "$PACKAGE_DEST"
     cp -R "$PACKAGE_SOURCE" "$PACKAGE_DEST"
