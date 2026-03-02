@@ -52,18 +52,18 @@ reset_package() {
 echo "Applying passthrough patch..."
 PATCH_APPLIED=false
 
-# 1) patch -p1  -- handles CRLF transparently on all platforms
+# 1) patch -p1 --batch  -- handles CRLF transparently on all platforms, non-interactive
 if command -v patch >/dev/null 2>&1; then
-    echo "  Trying: patch -p1 ..."
-    if (cd "$PROJECT_ROOT" && patch -p1 < "$PATCH_FILE"); then
+    echo "  Trying: patch -p1 --batch ..."
+    if (cd "$PROJECT_ROOT" && patch -p1 --batch < "$PATCH_FILE"); then
         if verify_patch_applied; then
-            echo "  Patch applied successfully via 'patch -p1'."
+            echo "  Patch applied successfully via 'patch -p1 --batch'."
             PATCH_APPLIED=true
         else
-            echo "  Warning: 'patch -p1' reported success but verification failed."
+            echo "  Warning: 'patch -p1 --batch' reported success but verification failed."
         fi
     else
-        echo "  'patch -p1' did not apply cleanly."
+        echo "  'patch -p1 --batch' did not apply cleanly."
     fi
 else
     echo "  'patch' command not found, skipping."
