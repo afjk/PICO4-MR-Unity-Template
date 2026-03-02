@@ -58,6 +58,8 @@ reset_package() {
 # -- Apply patch (highest-confidence method first) -------------------------
 echo "Applying passthrough patch..."
 PATCH_APPLIED=false
+GIT_APPLY_ERR_FILE="$(mktemp -t git_apply_err.XXXXXX)"
+trap 'rm -f "$GIT_APPLY_ERR_FILE"' EXIT
 
 # 1) patch -p1 --batch  -- handles CRLF transparently on all platforms, non-interactive
 if command -v patch >/dev/null 2>&1; then
@@ -81,7 +83,7 @@ if [[ "$PATCH_APPLIED" != "true" ]]; then
     if command -v git >/dev/null 2>&1; then
         echo "  Trying: git apply --ignore-whitespace ..."
         reset_package
-        if git -C "$PROJECT_ROOT" apply --ignore-whitespace -p1 "$PATCH_FILE" 2>/dev/null; then
+        if git -C "$PROJECT_ROOT" apply --ignore-whitespace -p1 "$PATCH_FILE" 2>"$GIT_APPLY_ERR_FILE"; then
             if verify_patch_applied; then
                 echo "  Patch applied successfully via 'git apply --ignore-whitespace'."
                 PATCH_APPLIED=true
@@ -89,7 +91,8 @@ if [[ "$PATCH_APPLIED" != "true" ]]; then
                 echo "  Warning: 'git apply --ignore-whitespace' reported success but verification failed."
             fi
         else
-            echo "  'git apply --ignore-whitespace' did not apply cleanly."
+            echo "  'git apply --ignore-whitespace' did not apply cleanly:"
+            cat "$GIT_APPLY_ERR_FILE" >&2
         fi
     else
         echo "  'git' command not found, skipping."
@@ -101,7 +104,8 @@ if [[ "$PATCH_APPLIED" != "true" ]]; then
     if command -v git >/dev/null 2>&1; then
         echo "  Trying: git apply ..."
         reset_package
-        if git -C "$PROJECT_ROOT" apply -p1 "$PATCH_FILE" 2>/dev/null; then
+        > "$GIT_APPLY_ERR_FILE"
+        if git -C "$PROJECT_ROOT" apply -p1 "$PATCH_FILE" 2>"$GIT_APPLY_ERR_FILE"; then
             if verify_patch_applied; then
                 echo "  Patch applied successfully via 'git apply'."
                 PATCH_APPLIED=true
@@ -109,7 +113,8 @@ if [[ "$PATCH_APPLIED" != "true" ]]; then
                 echo "  Warning: 'git apply' reported success but verification failed."
             fi
         else
-            echo "  'git apply' did not apply cleanly."
+            echo "  'git apply' did not apply cleanly:"
+            cat "$GIT_APPLY_ERR_FILE" >&2
         fi
     else
         echo "  'git' command not found, skipping."
