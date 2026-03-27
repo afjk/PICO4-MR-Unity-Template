@@ -1,0 +1,87 @@
+name: Unity Android Release Build
+
+on:
+  push:
+    tags:
+      - 'v*'              # v1.0.0 などのタグが push されたとき実行
+  workflow_dispatch:      # Actions 画面から手動実行も可能
+    inputs:
+      tag:
+        description: 'Release tag (e.g. v1.0.0)'
+        required: true
+
+jobs:
+  build-android-release:
+    name: Build Android Release APK
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+          fetch-depth: 0  # タグ情報を取得するために全履歴を fetch
+
+      - name: Free up disk space
+        uses: jlumbroso/free-disk-space@main
+        with:
+          tool-cache: true
+          docker-images: true
+          large-packages: true
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: Library
+          key: Library-Android-${{ hashFiles('Assets/**', 'Packages/**', 'ProjectSettings/**') }}
+          restore-keys: |
+            Library-Android-
+            Library-
+
+      - name: Build Unity Project (Android Release)
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: Android
+          unityVersion: 6000.0.59f2
+          buildName: PICO4-MR-Template
+          androidExportType: androidPackage   # APK 形式でビルド
+
+      - name: Get release tag name
+        id: get_tag
+        run: |
+          if [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "tag=${{ github.event.inputs.tag }}" >> $GITHUB_OUTPUT
+          else
+            echo "tag=${GITHUB_REF#refs/tags/}" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Find APK file
+        id: find_apk
+        run: |
+          APK_PATH=$(find build/ -name "*.apk" | head -1)
+          echo "apk_path=${APK_PATH}" >> $GITHUB_OUTPUT
+          echo "Found APK: ${APK_PATH}"
+
+      - name: Create GitHub Release and upload APK
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: ${{ steps.get_tag.outputs.tag }}
+          name: Release ${{ steps.get_tag.outputs.tag }}
+          body: |
+            ## PICO4 MR Unity Template ${{ steps.get_tag.outputs.tag }}
+
+            ### ダウンロード
+            - `PICO4-MR-Template.apk` - Android APK (PICO4 デバイス用)
+
+            ### インストール方法
+            1. PICO4 を開発者モードで接続
+            2. `adb install PICO4-MR-Template.apk` を実行
+          draft: false
+          prerelease: false
+          files: ${{ steps.find_apk.outputs.apk_path }}
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
