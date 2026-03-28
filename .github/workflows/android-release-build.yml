@@ -41,6 +41,35 @@ jobs:
             Library-Android-
             Library-
 
+      - name: Apply Meta OpenXR passthrough patch
+        run: |
+          set -euo pipefail
+
+          PACKAGE_NAME="com.unity.xr.meta-openxr"
+          PACKAGE_VERSION="2.4.0"
+          CACHE_PATH="Library/PackageCache/${PACKAGE_NAME}@${PACKAGE_VERSION}"
+
+          # Already patched (e.g. full Library cache hit with a previous patched build)
+          if [ -f "Packages/${PACKAGE_NAME}/Runtime/Subsystems/Camera/PassthroughInitializationGate.cs" ]; then
+            echo "Package already patched, skipping."
+            exit 0
+          fi
+
+          # Ensure the package exists in Library/PackageCache for apply_patch.sh
+          if [ ! -d "${CACHE_PATH}" ]; then
+            echo "Package not in Library/PackageCache. Downloading from Unity registry..."
+            TARBALL="$(mktemp --suffix=.tgz)"
+            trap 'rm -f "$TARBALL"' EXIT
+            curl -fsSL \
+              "https://packages.unity.com/${PACKAGE_NAME}/-/${PACKAGE_NAME}-${PACKAGE_VERSION}.tgz" \
+              -o "${TARBALL}"
+            mkdir -p "${CACHE_PATH}"
+            tar xzf "${TARBALL}" -C "${CACHE_PATH}" --strip-components=1
+            echo "Download complete: ${CACHE_PATH}"
+          fi
+
+          bash tools/meta-openxr/apply_patch.sh
+
       - name: Build Unity Project (Android Release)
         uses: game-ci/unity-builder@v4
         env:
