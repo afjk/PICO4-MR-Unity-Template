@@ -14,6 +14,8 @@ jobs:
   build-android-release:
     name: Build Android Release APK
     runs-on: ubuntu-latest
+    permissions:
+      contents: write   # GitHub Release の作成・APK アップロードに必要
 
     steps:
       - name: Checkout repository
@@ -21,9 +23,10 @@ jobs:
         with:
           lfs: true
           fetch-depth: 0  # タグ情報を取得するために全履歴を fetch
+          ref: ${{ github.event_name == 'workflow_dispatch' && github.event.inputs.tag || github.ref }}
 
       - name: Free up disk space
-        uses: jlumbroso/free-disk-space@main
+        uses: jlumbroso/free-disk-space@v1.3.0
         with:
           tool-cache: true
           docker-images: true
@@ -62,9 +65,23 @@ jobs:
       - name: Find APK file
         id: find_apk
         run: |
-          APK_PATH=$(find build/ -name "*.apk" | head -1)
-          echo "apk_path=${APK_PATH}" >> $GITHUB_OUTPUT
-          echo "Found APK: ${APK_PATH}"
+          set -euo pipefail
+
+          # Find all APK files under build/, sorted for deterministic order
+          mapfile -t apks < <(find build/ -type f -name "*.apk" -print | sort)
+
+          if [ "${#apks[@]}" -eq 0 ]; then
+            echo "Error: No APK files found under ./build/" >&2
+            exit 1
+          elif [ "${#apks[@]}" -gt 1 ]; then
+            echo "Error: Multiple APK files found under ./build/; refusing to pick one arbitrarily:" >&2
+            printf '  %s\n' "${apks[@]}" >&2
+            exit 1
+          fi
+
+          apk_path="${apks[0]}"
+          echo "apk_path=${apk_path}" >> "$GITHUB_OUTPUT"
+          echo "Found APK: ${apk_path}"
 
       - name: Create GitHub Release and upload APK
         uses: softprops/action-gh-release@v2
